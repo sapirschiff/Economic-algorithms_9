@@ -51,17 +51,17 @@ def draw_graph(matrix, title):
 
 def birkhoff_decomposition(matrix):
     if not is_balanced(matrix):
-        return None, "Graph is not balanced Birkhoff algorithm cannot proceed."
+        return None, "Graph is not balanced - Birkhoff algorithm cannot proceed."
 
     n = matrix.shape[0]
     working_matrix = matrix.copy()
     steps = []
 
 
-    j = 1  # Initiali: j = 1
+    j = 1  # Initialization: j = 1
 
     while True:
-        # Step 2:find perfect matching X_j in G
+        #sep 2: find perfect matching X_j in G
         G = nx.Graph()
         for i in range(n):
             for j_col in range(n):
@@ -71,16 +71,15 @@ def birkhoff_decomposition(matrix):
         matching_raw = maximum_matching(G, top_nodes={f"P{i}" for i in range(n)})
         X_j = [(int(p[1:]), int(i[1:])) for p, i in matching_raw.items() if p.startswith("P")]
 
-        # Only keep edges that exist in current matrix (non-zero weight)
         X_j = [(i, j_col) for (i, j_col) in X_j if working_matrix.iloc[i, j_col] > 1e-8]
 
         if len(X_j) < n:
             return steps, "No perfect matching — algorithm stopped."
 
-        # Step 3:find p_j = min weight in X_j
+        #step 3: find p_j = min weight in the x_j
         p_j = min(working_matrix.iloc[i, j_col] for i, j_col in X_j)
 
-        # Step 4:subtract p_j from each edge in X_j, remove edge if weight becomes 0
+        #step 4- subtract p_j from each edge in X_j
         for (i, j_col) in X_j:
             working_matrix.iloc[i, j_col] -= p_j
             if working_matrix.iloc[i, j_col] < 1e-8:
@@ -95,7 +94,7 @@ def birkhoff_decomposition(matrix):
 
         draw_graph(working_matrix, f"After Step j = {j} (Removed p_j = {p_j})")
 
-        # Step 5:if graph is empty, stop; otherwise increase j and continue
+        #step 5: if the graph is empty so stop
         if (working_matrix > 1e-8).sum().sum() == 0:
             break
 
@@ -117,3 +116,25 @@ if __name__ == "__main__":
         for step in steps:
             print(f"Step {step['Step']}: {step['Matching']} (Weight {step['Weight']})")
     print("\n" + message)
+
+    # if you want to run on good option so run this:
+
+    # matrix = pd.DataFrame([
+    #     [0.0, 0.0, 0.5, 0.5],
+    #     [0.5, 0.5, 0.0, 0.0],
+    #     [0.5, 0.5, 0.0, 0.0],
+    #     [0.0, 0.0, 0.5, 0.5],
+    # ], columns=[f"Item {j+1}" for j in range(4)],
+    #    index=[f"Player {i+1}" for i in range(4)])
+
+    # print("Initial matrix:")
+    # print(matrix.round(2))
+    # draw_graph(matrix, "Initial Matrix")
+
+    # steps, message = birkhoff_decomposition(matrix)
+
+    # print("\nResult:")
+    # if steps is not None:
+    #     for step in steps:
+    #         print(f"Step {step['Step']}: {step['Matching']} (Weight {step['Weight']})")
+    # print("\n" + message)
